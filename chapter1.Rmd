@@ -3,11 +3,32 @@
 
 *Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
 
+# Paula's thoughts about...
+## the course 
+
+I was really glad to find out about this doctoral course provided by Helsinki University. If I recall correctly, this was the result of the great work of the doctoral office and their kind (daily) emails promoting available and upcoming courses.
+
+I am a "second and a half" year doctoral student and very much into statistics. Despite my colleagues who hate it. Because of my enthusiasm, I took this course even though I constantly struggle to manage with all, my studies and working full time (as an MD). I also have kids I should pay some attention to. I have, however, promised to buy a dog for them once my PhD is finished so I'm not in any hurry here, haha.
+
+I enjoy the opportunity to study things online (whenever I have some free time!) and this course seems REALLY well organized in that regard. So thanks in advance. I hope I manage to get this first week's assignment done in time, I hate receiving zero points. I'm also sorry for the students that have the dishonor to review my output this week as it may not be very glamorous. My apologies.
+
+I expect my learn new and foremost **faster** and more efficient ways to use R. I was also surprised to hear about automated reports - that sounds fantastic (I think my supervisors would agree).
+
+## the R for Health Data Science book and the Exercise Set 1
+
+All the materials provided in the moodle environment are easy to read and greatly written! I guess taking this course now (not earlier, before any "real life statistical needs") is more beneficial for me than if I had participated earlier, even though now as I am going through the course material I realize that I would have saved several hours of work, had I known these things earlier. But it's always better late than never, right? 
+
+As I have done some work with R before, the first chapters in the HDS book sounded familiar. However, I learned that search engines prefer "older" scripts, which is good to know. I quess R programming language will evolve in time like any human language! In a couple of thousand years, nobody understands any "pipes"... Brouching through the book and excercise set 1 I already came across answers (=script) for some issues I have had previously working with datasets. For example, how to handle missing data (NAs) in R properly. This almost brought tears to my weary eyes. So, this truly is a "crash course"! 
+
+Getting started with R Markdown was executed so sneakily I didn't ever realize I started using it. Untill I did, and then started wondering if the package for R markdown was to be downloaded first..?
+
+*This is the link to my gitHub repository: https://github.com/norppakeitto/IODS-project*
+
+
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
 
 date()
-
 ```
 The text continues here.
 
