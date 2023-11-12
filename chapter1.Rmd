@@ -1,7 +1,8 @@
 
 # About the project
 
-Introduction to Open Data Science 2023
+This is a PhD course organized by Helsinki University. The project is about getting advanced skills on open data analysis with R.
+
 *Link to my gitHub repository: https://github.com/norppakeitto/IODS-project*
 
 # Paula's thoughts about...
@@ -13,7 +14,7 @@ I am a third year doctoral student and very much into statistics. Despite my col
 
 I enjoy the opportunity to study things online (whenever I have some free time!) and this course seems REALLY well organized in that regard. So thanks in advance. I hope I manage to get this first week's assignment done in time, I hate receiving zero points. I'm also sorry for the students that have the dishonor to review my output this week as it may not be very glamorous. My apologies.
 
-I expect my learn new and foremost **faster** and more efficient ways to use R. I was also surprised to hear about automated reports - that sounds fantastic (I think my supervisors would agree).
+I expect to learn new and foremost **faster** and more efficient ways to use R. I was also surprised to hear about automated reports - that sounds fantastic (I think my supervisors would agree).
 
 ## the R for Health Data Science book and the Exercise Set 1
 
@@ -27,10 +28,9 @@ Getting started with R Markdown was executed so sneakily I didn't ever realize I
 
 
 ```{r}
-# This is a so-called "R chunk" where you can write R code.
 
 date()
 
 ```
-The text continues here.
+
 
