@@ -86,6 +86,7 @@ p3 <- p2 + geom_smooth(method = "lm")
 
 p3
 ```
+
 ### Diagnostic plots ###
 
 Diagnostic plots are necessary in order to evaluate that the four assumptions of a linear model fulfill. The assumptions are:
