@@ -39,6 +39,8 @@ p <- ggpairs(lrn14, mapping = aes(col=gender, alpha = 0.3), lower = list(combo =
 p
 ```
 
+
+
 The age distribution is quite similar between the two genders; majority of the students are in their early 20´s.
 
 Based on the plots and correlation coefficient, there seems to be statistically significant positive correlation between the students' attitude and exam points (in both genders) and negative correlation between the deep and surface learning skills of male students.
