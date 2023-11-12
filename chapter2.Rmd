@@ -38,6 +38,7 @@ p <- ggpairs(lrn14, mapping = aes(col=gender, alpha = 0.3), lower = list(combo =
 # Print the matrix
 p
 ```
+
 The age distribution is quite similar between the two genders; majority of the students are in their early 20´s.
 
 Based on the plots and correlation coefficient, there seems to be statistically significant positive correlation between the students' attitude and exam points (in both genders) and negative correlation between the deep and surface learning skills of male students.
@@ -56,6 +57,7 @@ my_model <- lm(points ~ attitude + stra + surf, data = lrn14)
 summary(my_model)
 
 ```
+
 The exam points would not be predicted very accurately using this model, since the model only explains around 20 % of the outcome (=points) variation in the sample (Multiple R-squared:0.2074). Based on statistical significance (as in enough correlation with the outcome), only attitude seems worth keeping in the model. We could try to improve the model by extracting the other two explanatory variables from the model:
 
 ```{r}
@@ -67,6 +69,7 @@ my_model2 <- lm(points ~ attitude, data = lrn14)
 summary(my_model2)
 
 ```
+
 This model is not, however, much better, since the predictive ability (Multiple R-squared) is still only around 19 %. Let's plot the corresponding regression line:
 
 ```{r}
