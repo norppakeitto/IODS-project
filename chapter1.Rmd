@@ -1,7 +1,8 @@
 
 # About the project
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+Introduction to Open Data Science 2023
+*Link to my gitHub repository: https://github.com/norppakeitto/IODS-project*
 
 # Paula's thoughts about...
 ## the course 
@@ -22,7 +23,7 @@ As I have worked with R before, the first chapters in the RHDS book sounded fami
 
 Getting started with R Markdown was executed so sneakily I didn't ever realize I started using it. Untill I did, and then started wondering if the package for R markdown was to be downloaded first..?
 
-*This is the link to my gitHub repository: https://github.com/norppakeitto/IODS-project*
+
 
 
 ```{r}
