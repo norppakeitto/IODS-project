@@ -45,11 +45,11 @@ The age distribution is quite similar between the two genders; majority of the s
 
 Based on the plots and correlation coefficient, there seems to be statistically significant positive correlation between the students' attitude and exam points (in both genders) and negative correlation between the deep and surface learning skills of male students.
 
-### Creating a linear model ### 
+### Creating a regression model ### 
 
-Let's try and create a regression model that predicts the (future) students' exam points. 
+Regression is a way to establish the existence and strength of the relationship between two or more variables. For this purpose, we first need to the choose the target variable, e.g. the variable the value of which is of most interest. This variable is called the dependent or outcome variable. The behavior of this variable can then perhaps be predicted using one or more independent variables in the dataset. Now we aim to create a regression model that predicts the (future) students' exam points.
 
-The three most promising explanatory variables for such a regression model would be the variables attitude, stra and surf. Let's create a linear model using these variables:
+Based on the distributions observed previously, a liner model (where the relationship between two variables is linear) seems reasonable to start with, and the three most promising explanatory variables for such a regression model would be the variables attitude, stra and surf. Let's create a linear model using these variables:
 ```{r}
 # fit a linear model
 my_model <- lm(points ~ attitude + stra + surf, data = lrn14)
@@ -60,7 +60,13 @@ summary(my_model)
 
 ```
 
-The exam points would not be predicted very accurately using this model, since the model only explains around 20 % of the outcome (=points) variation in the sample (Multiple R-squared:0.2074). Based on statistical significance (as in enough correlation with the outcome), only attitude seems worth keeping in the model. We could try to improve the model by extracting the other two explanatory variables from the model:
+The model summary gives us first the "fivenum" of the residuals, that is the difference between observed and "predicted" values in the model. Since some predictions fall behind, these are negative, and vice versa. The distribution of these residuals can be evaluated from looking at these values, but a graphical output will be explored a bit later.
+
+Then there are the model coefficients. These describe the mathematical relationship between the outcome variable (points) and each independent variable. The p-values (Pr) are the calculated statistical significances for each relationship. In this model, 11 points in the exam would be achieved with the combination of attitude of 3.4, stra 0.85 and surf -0.58.
+
+The residual standard error is the average deviation between the true values and predicted values in the model. In this case, this would be 5.3 points. Underneath this there is Multiple R-squared that means, how much of the variation in the true points can be explained by the variation in the beforementioned explanatory variables and this is around 21 %. The adjusted R-squared gives us a reference to which another model can be compared to: if adding a certain variable to the model makes it better, then this would increase.
+
+Perhaps we should try and remove the variables that are not statistically significant for the predictability of the model. 
 
 ```{r}
 # fit a linear model
@@ -72,7 +78,7 @@ summary(my_model2)
 
 ```
 
-This model is not, however, much better, since the predictive ability (Multiple R-squared) is still only around 19 %. Let's plot the corresponding regression line:
+This model is not, however, any better, since the predictive ability (Multiple R-squared) is still only around 19 %. Let's plot the corresponding regression line:
 
 ```{r}
 
@@ -92,18 +98,20 @@ p3 <- p2 + geom_smooth(method = "lm")
 p3
 ```
 
+
+
+This shows there are some very low points across attitude values, explaining the poor fit.
+
 ### Diagnostic plots ###
 
 Diagnostic plots are necessary in order to evaluate that the four assumptions of a linear model fulfill. The assumptions are:
 
-1. Linear relationship between the predictor(s) and outcome (if it is not linear, than a linear model most likely doesn't fit very well);
-2. Independence of residuals, (that is, one student's points do not affect another student's points); 
-3. Normal distribution of residuals (exam points should be normally distributed); and
-4. Equal variance of residuals (there is no greater variance among students with appalling exam points than those with good points)
+1. Linear relationship between the predictor variable(s) and outcome (if it is not linear, than a linear model most likely doesn't fit very well);
+2. Independence of residuals, (that is, the residuals of the sample are not dependent on each other); 
+3. Normal distribution of residuals (reflecting their linearity); and
+4. Equal variance of residuals (there is no greater variance in residuals of low or high points) 
 
-The linear relationship here seems valid, based on the previous plot.
-
-The rest will be evaluated using the following diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.
+Diagnostic plots can be used to determine (eyeball) the validity of assumption in this case with Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage -plots.
 
 ```{r}
 
@@ -116,11 +124,9 @@ par(mfrow = c(2,2))
 plot(my_model2, which = c(1,2,5))
 ```
 
-The residuals seem to be quite normally distributed, as seen in Residuals vs Fitted. The residuals lie quite randomly above and below zero. The residuals seem to be of similar size with lower and higher fitted values; however, there are some outliers that bounce up, also violating the normal distribution of the residuals (the same outliers are seen on the The Normal Q-Q plot that is otherwise quite satisfactory).
-
-The residuals vs leverage gives information about the data points that may distort the model. The students number 35, 56 and 71 have large residuals, so removing these students from the dataset would perhaps add to linear model accuracy.
 
 
+The residuals seem to be quite normally distributed around zero, as seen in Residuals vs Fitted -plot. However, the Q-Q plot is worrysome since there are residuals that fall off the straight line (that would imply normal distribution). The same can be observed whilst looking at the Residuals vs Leverage -plot. Based on these diagnostic plots, there are some "outliers" in the sample. Removing these dataplots (students) from the sample would probably give a linear model more accuracy, or, the model needs to be further improved. 
 ```{r}
 date()
 ```
