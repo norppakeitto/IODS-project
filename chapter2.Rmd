@@ -62,7 +62,7 @@ summary(my_model)
 
 The model summary gives us first the "fivenum" of the residuals, that is the difference between observed and "predicted" values in the model. Since some predictions fall behind, these are negative, and vice versa. The distribution of these residuals can be evaluated from looking at these values, but a graphical output will be explored a bit later.
 
-Then there are the model coefficients. These describe the mathematical relationship between the outcome variable (points) and each independent variable. The p-values (Pr) are the calculated statistical significances for each relationship. In this model, 11 points in the exam would be achieved with the combination of attitude of 3.4, stra 0.85 and surf -0.58.
+Then there are the model coefficients. These describe the mathematical relationship between the outcome variable (points) and each independent variable. The p-values (Pr) are the calculated statistical significances for each relationship. 
 
 The residual standard error is the average deviation between the true values and predicted values in the model. In this case, this would be 5.3 points. Underneath this there is Multiple R-squared that means, how much of the variation in the true points can be explained by the variation in the beforementioned explanatory variables and this is around 21 %. The adjusted R-squared gives us a reference to which another model can be compared to: if adding a certain variable to the model makes it better, then this would increase.
 
@@ -126,7 +126,7 @@ plot(my_model2, which = c(1,2,5))
 
 
 
-The residuals seem to be quite normally distributed around zero, as seen in Residuals vs Fitted -plot. However, the Q-Q plot is worrysome since there are residuals that fall off the straight line (that would imply normal distribution). The same can be observed whilst looking at the Residuals vs Leverage -plot. Based on these diagnostic plots, there are some "outliers" in the sample. Removing these dataplots (students) from the sample would probably give a linear model more accuracy, or, the model needs to be further improved. 
+The residuals seem to be quite normally distributed around zero, as seen in Residuals vs Fitted -plot. However, the Q-Q plot is worrysome since there are residuals that fall off the straight line (that would imply normal distribution). The same can be observed whilst looking at the Residuals vs Leverage -plot. Based on these diagnostic plots, there are some "outliers" in the sample. Removing these datapoints (students) from the sample would probably give a linear model more accuracy, or, the model needs to be further improved. 
 ```{r}
 date()
 ```
