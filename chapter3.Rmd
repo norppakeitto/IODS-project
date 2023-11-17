@@ -1,13 +1,196 @@
 # Assignment 3
 
+### Dataset description ###
+
+The analysis dataset used in this assignment is based on "Student Performance Data", available at the UCI Machine Learning Repository and kindly shared with us by Paulo Cortez.
+
+The Student Performance Data includes _two_ datasets regarding student performance in secondary education of two Portuguese schools, in two distinct subjects: mathematics and portuguese language. In addition, several background variables, such as age, sex, geopraphical and family history, are included. The "Student Performance Data" dataset and metadata are available [here](https://archive.ics.uci.edu/ml/datasets/Student+Performance).
+
+For this assigment, data is unified from these two datasets via several background variables. Thus only students who answered the questionnaire in both math and Portuguese classes are kept in our analysis dataset. Duplicated data has been removed by keeping the first entry for character variables. In case of two answers to single numerical variable, it has been replaced with the mean.
+
+```{r}
+library(readr)
+alc <- read_csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/alc.csv", show_col_types=F)
+
+# Print out all column names
+colnames(alc)
+```
+
+New variables have been introduced to the analysis dataset: Variable "alc_use" is the average alcohol consumption in week, calculated from "Dalc" (workday alcohol consumption (numeric: from 1 - very low to 5 - very high)) and "Walc" (weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)). Variable "alc_high" is TRUE, when alc_use > 2.
+
+### Data analysis ###
+
+The purpose of this weeks analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. Since the outcome variable is binary, we shall use logistic regression with binomial (Bernoulli) distribution. Basically, we will be comparing the observed relationships in the model to the odds of a coin toss.
+
+To do this, we first choose 4 interesting variables in the data. Let's start by drawing a bar plot of each variable.
+
+```{r}
+
+library(tidyr); library(dplyr); library(ggplot2)
+
+gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + 
+  geom_bar()
+
+```
+
+
+Regarding important background variables; sex usually represents a covariate, so it probably should be included in the model.
+
+```{r}
+library(dplyr); library(ggplot2)
+
+# Summary statistics by group
+
+alc %>% group_by(sex, high_use) %>% summarise(count = n())
+p1 <- table(alc$sex, alc$high_use)
+prop.table(p1)
+```
+
+
+
+There seems to be higher alcohol consumption among males than females, so 1. sex. Another important backgroud variable might be age, but in this case, it seems irrelevant since the age distribution of the students is quite narrow:
+
+```{r}
+
+summary(alc$age)
+  
+```
+
+
+
+Regarding the other variables, alcohol consumption might - based on previous research data and personal experience - affect grades (2.), cause more absences (3.) and failures in exams (4.).
+
+Let's plot these variables against high_use, separating females and males. Since the grade has three repetative measures / one individual (G1, G2 and G3), we will only include one of these (G3). For more info behind this decision, please see original data metadata.
+
+```{r}
+library(tidyr); library(dplyr); library(ggplot2)
+
+g1 <- ggplot(alc, aes(x = high_use, y = G3, col=sex))
+g1 + geom_boxplot() + ylab("grade")
+
+g2 <- ggplot(alc, aes(x = high_use, y = absences, col=sex)) 
+g2 + geom_boxplot() + ylab("absences")
+
+g3 <- ggplot(alc, aes(x = high_use, y = failures, col=sex)) 
+g3 + geom_boxplot() + ylab("failures")
+
+```
+
+
+
+It seems that high alcohol consumption may deteriorate grades and increase absences especially among male students. Regarding failures, majority of cases in the dataset pass their exams. The boxplot is therefore not very informative. Let's try summaries. Whilst doing this, another variable (worth a look perhaps) is health.
+
+```{r}
+library(dplyr)
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade=mean(G3), mean_age=mean(age), mean_absences=mean(absences), mean_failures=mean(failures), mean_health=mean(health))
+
+```
+
+
+
+Interestingly, students with higher alcohol consumption report better state of health. We should also keep the failures, since the mean of failures is greater among those with high alcohol consumption. So, we'll stick to the previous four. 
+
+### Logistic regression ###
+
+
+```{r}
+m1 <- glm(high_use ~ failures + absences + sex + G3, data = alc, family = "binomial")
+coef(m1)
+summary(m1)
+```
+
+
+
+The deviance tells us how well our model fits the data, in terms of error. The coefficients are the _logarithmic odds_ that represent change in the response variable in respect to one unit change in the explanatory variable, keeping that the other variables stay put (conditionally on these). Logartimic link function is necessary here to provide equal scale to the response variable (odds from 0-100%, 0-1) and the explanatory variables (with also numerical values included). 
+
+The interpretation regarding sex here is a bit different: one unit change in this variable means transition from one category to other; from female (0) to male (1). 
+
+Odds can be tabulated using exp(Estimate) = propability/(1-probability) = ODDS. These are interpreted as odds ratios between one unit change vs. no change in the corresponding explanatory variable.
+
+If the slopes of the fitted lines (model coefficients) are indifferent from zero, the variable is statistically significant. 
+
+There is also AIC = Akaike information criterion, that tells us how economic the model is. That is, how good is the predictive ability when considering the number of variables included (too many might cause overfitting).
+
+In this case, G3 seems unnecessary, so we could drop it.
+
+```{r}
+m2 <- glm(high_use ~ failures + absences + sex, data = alc, family = "binomial")
+coef(m2)
+summary(m2)
+```
+
+
+
+Let's also calculate the ODDS ratios and confidence intervals (95%):
+
+```{r}
+OR <- coef(m2) %>% exp
+CI <- confint(m2)
+cbind(OR, CI)
+```
+
+
+
+With model 2, AIC is lower (which is good!) and all the remaining variables remain statistically significant. 
+
+The OR for having high alcohol consumption is 1.8 higher if failures increase by one (unit); 1.1 higher if absences increase by one (unit); and 2.7 higher if the student is a male (than a female). These are conditional of the other variable values staying similar.
+
+However, the 95% CI crosses the value "1" in absences and sex. That means that based on this data, the true OR may be 1, which is no difference (per one unit change). 
+
+This doesn't mean that the model could not be used for prediction purposes, though.
+
+### Predicting exercise ###
+
+```{r}
+library(dplyr)
+# predict() the probability of high_use
+probabilities <- predict(m2, type = "response")
+alc <- mutate(alc, probability = probabilities)
+alc <- mutate(alc, prediction = probability>0.5)
+table(high_use = alc$high_use, prediction = alc$prediction)
+
+```
+
+
+
+Graphic visualizing both the actual values and the predictions:
+```{r}
+library(dplyr); library(ggplot2)
+
+# initialize a plot of 'high_use' versus 'probability' in 'alc'
+g <- ggplot(alc, aes(x = probability, y = high_use, col = prediction))
+g + geom_point()
+
+```
+
+
+
+This visualizes that the model performs better on low alcohol users than among high alcohol users.
+
+Training error using mean prediction error:
+```{r}
+
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+lf <- loss_func(class = alc$high_use, prob = alc$probability)
+1-lf 
+```
+
+
+
+23 % of the predictions done with this model would be incorrect; 77 % would be correct. If I was to toss a coin (for a thousand times) guessing "heads" every time, I would be right in 50 % of cases. So the model exceeds pure guess.
+
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-```
 
-```{r}
 date()
 ```
 
