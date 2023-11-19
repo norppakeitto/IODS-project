@@ -101,17 +101,17 @@ summary(m1)
 
 
 
-The deviance tells us how well our model fits the data, in terms of error. The coefficients are the _logarithmic odds_ that represent change in the response variable in respect to one unit change in the explanatory variable, keeping that the other variables stay put (conditionally on these). Logartimic link function is necessary here to provide equal scale to the response variable (odds from 0-100%, 0-1) and the explanatory variables (with also numerical values included). 
+The deviance tells us how well our model fits the data, in terms of error. The coefficient estimates are the _logarithmic odds_ of change in the response variable, in respect to one unit change in the explanatory variable, keeping that the other variables stay put (conditionally on these). Logartimic link function is necessary here to provide equal scale to the response variable that varies from 0-100% (or 0-1) and the explanatory variables (with also numerical values included). 
 
 The interpretation regarding sex here is a bit different: one unit change in this variable means transition from one category to other; from female (0) to male (1). 
 
-Odds can be tabulated using exp(Estimate) = propability/(1-probability) = ODDS. These are interpreted as odds ratios between one unit change vs. no change in the corresponding explanatory variable.
+The odds can be tabulated with exp(Estimate) = propability/(1-probability) = ODDS. These can be interpreted as _odds ratios between one unit change vs. no change_ in the corresponding explanatory variable.
 
-If the slopes of the fitted lines (model coefficients) are indifferent from zero, the variable is statistically significant. 
+In this model, both absences and sex are highly significant predictors of the probability of being judged to have high alcohol consumption.
 
-There is also AIC = Akaike information criterion, that tells us how economic the model is. That is, how good is the predictive ability when considering the number of variables included (too many might cause overfitting).
+There is also AIC = Akaike information criterion, that tells us how economic the model is. That is, how good is the predictive ability when considering the number of variables included, as too many might cause overfitting.
 
-In this case, G3 seems unnecessary, so we could drop it.
+In this case, grades (G3) seem unnecessary, so we can drop it.
 
 ```{r}
 m2 <- glm(high_use ~ failures + absences + sex, data = alc, family = "binomial")
@@ -121,7 +121,7 @@ summary(m2)
 
 
 
-Let's also calculate the ODDS ratios and confidence intervals (95%):
+With model 2, AIC is lower (which is good!) and all the remaining variables remain statistically significant. Let's calculate the corresponding ODDS ratios and confidence intervals (95%):
 
 ```{r}
 OR <- coef(m2) %>% exp
@@ -131,11 +131,9 @@ cbind(OR, CI)
 
 
 
-With model 2, AIC is lower (which is good!) and all the remaining variables remain statistically significant. 
-
 The OR for having high alcohol consumption is 1.8 higher if failures increase by one (unit); 1.1 higher if absences increase by one (unit); and 2.7 higher if the student is a male (than a female). These are conditional of the other variable values staying similar.
 
-However, the 95% CI crosses the value "1" in absences and sex. That means that based on this data, the true OR may be 1, which is no difference (per one unit change). 
+However, the 95% CI crosses the value "1" in absences and sex. That means that based on this data, the true OR may be 1, which means no difference (per one unit change). 
 
 This doesn't mean that the model could not be used for prediction purposes, though.
 
@@ -143,7 +141,7 @@ This doesn't mean that the model could not be used for prediction purposes, thou
 
 ```{r}
 library(dplyr)
-# predict() the probability of high_use
+# predict the probability of high_use
 probabilities <- predict(m2, type = "response")
 alc <- mutate(alc, probability = probabilities)
 alc <- mutate(alc, prediction = probability>0.5)
@@ -157,7 +155,6 @@ Graphic visualizing both the actual values and the predictions:
 ```{r}
 library(dplyr); library(ggplot2)
 
-# initialize a plot of 'high_use' versus 'probability' in 'alc'
 g <- ggplot(alc, aes(x = probability, y = high_use, col = prediction))
 g + geom_point()
 
@@ -184,6 +181,22 @@ lf <- loss_func(class = alc$high_use, prob = alc$probability)
 23 % of the predictions done with this model would be incorrect; 77 % would be correct. If I was to toss a coin (for a thousand times) guessing "heads" every time, I would be right in 50 % of cases. So the model exceeds pure guess.
 
 
+### Cross validation ###
+
+Let's perform 10-fold cross-validation on the model and compare the test set performance (measured as smaller prediction error) to the model introduced in the Exercise Set (which had about 0.26 error). 
+
+```{r}
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m2, K = 10)
+
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+```
+
+
+This model's test set performance exceeds the performance of the exercise set model.
+
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -193,4 +206,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 date()
 ```
+
+
+
 
