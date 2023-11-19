@@ -1,13 +1,133 @@
-# Insert chapter 2 title here
+# Assignment 2
 
-*Describe the work you have done this week and summarize your learning.*
+### Dataset description ###
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+The dataset used in this assignment (lrn14) is retrieved from a larger dataset of "international survey of Approaches to Learning" -study (learning2014), belonging to research project ASSIST 2014 by Kimmo Vehkalahti.
 
+The original dataset includes the points the students (n=183) participating in the course "Introduction to Social Statistics" in fall 2014 (in Finnish) received in the course exam, and several variables derived from survey questions that determine the students' attitude towards statistics (based on SATS -questionnary), approaches and study skills (based on ASSIST-questionnary). Background variables include age and gender. More information about the original dataset is available at https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS3-meta.txt.
+
+The original data has many questions that measure the same *dimension*, that have been transformed to combination variables in the lrn14 dataset. These represent the mean values of all questions that measure deep, surface and strategic learning. Furthermore, the student's attitude towards statistics has been originally measured as a sum variable of ten Likert scaled (1-5) questions, and the lrn14 dataset includes the mean value of these. Finally, students that have not attended the course examp (points = 0) have been excluded.
+
+To get started, the dataset is loaded to R using the `read.table` -function:
+```{r}
+lrn14 <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/learning2014.txt", sep=",", header=TRUE) # The separator is a comma "," and the file includes a header
+```
+
+Then dataset's dimensions and structure can be assessed using `dim()`and `str()`:
+```{r}
+dim(lrn14)
+str(lrn14)
+```
+
+The dataset has 166 rows and 7 columns (variables), including gender, age, attitude, deep, stra, surf and points.
+
+### Graphical overview of the data ### 
+```{r}
+# Access the GGally and ggplot2 libraries
+
+library(ggplot2)
+library(GGally)
+
+# A scatter plot matrix of the variables
+# [-1] excludes the first column (gender); this needs to be excluded since the `pairs` works only with numerical variables
+pairs(lrn14[-1])
+
+# A more advanced plot matrix can be produced with ggpairs()
+p <- ggpairs(lrn14, mapping = aes(col=gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+
+# Print the matrix
+p
+```
+
+
+
+The age distribution is quite similar between the two genders; majority of the students are in their early 20´s.
+
+Based on the plots and correlation coefficient, there seems to be statistically significant positive correlation between the students' attitude and exam points (in both genders) and negative correlation between the deep and surface learning skills of male students.
+
+### Creating a regression model ### 
+
+Regression is a way to establish the existence and strength of the relationship between two or more variables. For this purpose, we first need to the choose the target variable, e.g. the variable the value of which is of most interest. This variable is called the dependent or outcome variable. The behavior of this variable can then perhaps be predicted using one or more independent variables in the dataset. Now we aim to create a regression model that predicts the (future) students' exam points.
+
+Based on the distributions observed previously, a liner model (where the relationship between two variables is linear) seems reasonable to start with, and the three most promising explanatory variables for such a regression model would be the variables attitude, stra and surf. Let's create a linear model using these variables:
+```{r}
+# fit a linear model
+my_model <- lm(points ~ attitude + stra + surf, data = lrn14)
+
+# print out a summary of the model
+
+summary(my_model)
+
+```
+
+The model summary gives us first the "fivenum" of the residuals, that is the difference between observed and "predicted" values in the model. Since some predictions fall behind, these are negative, and vice versa. The distribution of these residuals can be evaluated from looking at these values, but a graphical output will be explored a bit later.
+
+Then there are the model coefficients. These describe the mathematical relationship between the outcome variable (points) and each independent variable. The p-values (Pr) are the calculated statistical significances for each relationship. 
+
+The residual standard error is the average deviation between the true values and predicted values in the model. In this case, this would be 5.3 points. Underneath this there is Multiple R-squared that means, how much of the variation in the true points can be explained by the variation in the beforementioned explanatory variables and this is around 21 %. The adjusted R-squared gives us a reference to which another model can be compared to: if adding a certain variable to the model makes it better, then this would increase.
+
+Perhaps we should try and remove the variables that are not statistically significant for the predictability of the model. 
+
+```{r}
+# fit a linear model
+my_model2 <- lm(points ~ attitude, data = lrn14)
+
+# print out a summary of the model
+
+summary(my_model2)
+
+```
+
+This model is not, however, any better, since the predictive ability (Multiple R-squared) is still only around 19 %. Let's plot the corresponding regression line:
+
+```{r}
+
+library(ggplot2)
+
+p1 <- ggplot(lrn14, aes(x = attitude, y = points))
+
+# define the visualization type (points)
+p2 <- p1 + geom_point()
+
+# draw the plot
+p2
+
+# add a regression line
+p3 <- p2 + geom_smooth(method = "lm")
+
+p3
+```
+
+
+
+This shows there are some very low points across attitude values, explaining the poor fit.
+
+### Diagnostic plots ###
+
+Diagnostic plots are necessary in order to evaluate that the four assumptions of a linear model fulfill. The assumptions are:
+
+1. Linear relationship between the predictor variable(s) and outcome (if it is not linear, than a linear model most likely doesn't fit very well);
+2. Independence of residuals, (that is, the residuals of the sample are not dependent on each other); 
+3. Normal distribution of residuals (reflecting their linearity); and
+4. Equal variance of residuals (there is no greater variance in residuals of low or high points) 
+
+Diagnostic plots can be used to determine (eyeball) the validity of assumption in this case with Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage -plots.
+
+```{r}
+
+# par(mfrow = c(2,2)) will place the following 4 graphics to the same plot
+
+par(mfrow = c(2,2))
+
+# We use the "plot()" function and specifically choose plots 1, 2 and 5 using the argument `which`. You can check the help page of plotting an lm object by typing `?plot.lm` or `help(plot.lm)` to the R console. 
+
+plot(my_model2, which = c(1,2,5))
+```
+
+
+
+The residuals seem to be quite normally distributed around zero, as seen in Residuals vs Fitted -plot. However, the Q-Q plot is worrysome since there are residuals that fall off the straight line (that would imply normal distribution). The same can be observed whilst looking at the Residuals vs Leverage -plot. Based on these diagnostic plots, there are some "outliers" in the sample. Removing these datapoints (students) from the sample would probably give a linear model more accuracy, or, the model needs to be further improved. 
 ```{r}
 date()
 ```
 
-Here we go again...
