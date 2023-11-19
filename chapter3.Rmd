@@ -22,7 +22,7 @@ New variables have been introduced to the analysis dataset: Variable "alc_use" i
 
 The purpose of this weeks analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. Since the outcome variable is binary, we shall use logistic regression with binomial (Bernoulli) distribution. Basically, we will be comparing the observed relationships in the model to the odds of a coin toss.
 
-To do this, we first choose 4 interesting variables in the data. Let's start by drawing a bar plot of each variable.
+To do this, we first choose 4 interesting variables in the data. Let's start by drawing a bar plot of each variable to get a better conseption of the variables and their distribution.
 
 ```{r}
 
@@ -32,6 +32,7 @@ gather(alc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") +
   geom_bar()
 
 ```
+
 
 
 Regarding important background variables; sex usually represents a covariate, so it probably should be included in the model.
@@ -82,7 +83,7 @@ It seems that high alcohol consumption may deteriorate grades and increase absen
 
 ```{r}
 library(dplyr)
-alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade=mean(G3), mean_age=mean(age), mean_absences=mean(absences), mean_failures=mean(failures), mean_health=mean(health))
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade=mean(G3), mean_absences=mean(absences), mean_failures=mean(failures), mean_health=mean(health))
 
 ```
 
@@ -121,7 +122,17 @@ summary(m2)
 
 
 
-With model 2, AIC is lower (which is good!) and all the remaining variables remain statistically significant. Let's calculate the corresponding ODDS ratios and confidence intervals (95%):
+With model 2, AIC is lower (which is good!) and all the remaining variables remain statistically significant. Then we should check for multicollinearity:
+
+```{r}
+library(car)
+
+#calculate the VIF for each predictor variable in the model
+vif(m2)
+```
+
+
+VIF is low, so no worries in that regard. Then, let's calculate the corresponding ODDS ratios and confidence intervals (95%):
 
 ```{r}
 OR <- coef(m2) %>% exp
@@ -136,6 +147,7 @@ The OR for having high alcohol consumption is 1.8 higher if failures increase by
 However, the 95% CI crosses the value "1" in absences and sex. That means that based on this data, the true OR may be 1, which means no difference (per one unit change). 
 
 This doesn't mean that the model could not be used for prediction purposes, though.
+
 
 ### Predicting exercise ###
 
