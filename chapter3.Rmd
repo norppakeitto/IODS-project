@@ -6,7 +6,7 @@ The analysis dataset used in this assignment is based on "Student Performance Da
 
 The Student Performance Data includes _two_ datasets regarding student performance in secondary education of two Portuguese schools, in two distinct subjects: mathematics and portuguese language. In addition, several background variables, such as age, sex, geopraphical and family history, are included. The "Student Performance Data" dataset and metadata are available [here](https://archive.ics.uci.edu/ml/datasets/Student+Performance).
 
-For this assigment, data is unified from these two datasets via several background variables. Thus only students who answered the questionnaire in both math and Portuguese classes are kept in our analysis dataset. Duplicated data has been removed by keeping the first entry for character variables. In case of two answers to single numerical variable, it has been replaced with the mean.
+For this assigment, data is unified from these two datasets via several background variables. Thus only students who answered the questionnaire in both math and portuguese classes are kept in our analysis dataset. Duplicated data has been removed by keeping the first entry for character variables. In case of numerical variables, it has been replaced with the mean.
 
 ```{r}
 library(readr)
@@ -49,54 +49,52 @@ prop.table(p1)
 
 
 
-There seems to be higher alcohol consumption among males than females, so 1. sex. Another important backgroud variable might be age, but in this case, it seems irrelevant since the age distribution of the students is quite narrow:
+There seems to be higher alcohol consumption among males than females, so 1. sex. Another important backgroud variable might be age (2.), as perhaps the youngest students may not be allowed to purchase alcohol themselves.
 
-```{r}
+Regarding the other variables, alcohol consumption might - based on previous research data and personal experience - affect grades (3.), cause more absences (4.) and failures in exams (5.). These students may also go out more, as alcohol is often consumed while partying (6.). High alcohol consumtion might also deteriorate health (6.).
 
-summary(alc$age)
-  
-```
-
-
-
-Regarding the other variables, alcohol consumption might - based on previous research data and personal experience - affect grades (2.), cause more absences (3.) and failures in exams (4.).
-
-Let's plot these variables against high_use, separating females and males. Since the grade has three repetative measures / one individual (G1, G2 and G3), we will only include one of these (G3). For more info behind this decision, please see original data metadata.
+Let's plot these variables against high_use, separating females and males. Since the grade has three repetative measures / one individual (G1, G2 and G3), we will only include one of these, the final exam (G3). 
 
 ```{r}
 library(tidyr); library(dplyr); library(ggplot2)
 
-g1 <- ggplot(alc, aes(x = high_use, y = G3, col=sex))
-g1 + geom_boxplot() + ylab("grade")
+g1 <- ggplot(alc, aes(x = high_use, y = age, col=sex))
+g1 + geom_boxplot() + ylab("age")
 
-g2 <- ggplot(alc, aes(x = high_use, y = absences, col=sex)) 
-g2 + geom_boxplot() + ylab("absences")
+g2 <- ggplot(alc, aes(x = high_use, y = G3, col=sex))
+g2 + geom_boxplot() + ylab("grade")
 
-g3 <- ggplot(alc, aes(x = high_use, y = failures, col=sex)) 
-g3 + geom_boxplot() + ylab("failures")
+g3 <- ggplot(alc, aes(x = high_use, y = absences, col=sex)) 
+g3 + geom_boxplot() + ylab("absences")
+
+g4 <- ggplot(alc, aes(x = high_use, y = failures, col=sex)) 
+g4 + geom_boxplot() + ylab("failures")
+
+g5 <- ggplot(alc, aes(x = high_use, y = goout, col=sex)) 
+g5 + geom_boxplot() + ylab("go out")
+
+g6 <- ggplot(alc, aes(x = high_use, y = health, col=sex)) 
+g6 + geom_boxplot() + ylab("health")
 
 ```
 
 
 
-It seems that high alcohol consumption may deteriorate grades and increase absences especially among male students. Regarding failures, majority of cases in the dataset pass their exams. The boxplot is therefore not very informative. Let's try summaries. Whilst doing this, another variable (worth a look perhaps) is health.
+The median age of male students with high alcohol consumption is higher than of those with low alcohol consumption, and the opposite is true for females. However, the outlier student that is 22 years old within male high alcohol consumer group may distort the distribution. The overall age distribution is also quite narrow (majority of the students are about the same age) which may weaken the variable's predictive ability.
 
-```{r}
-library(dplyr)
-alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade=mean(G3), mean_absences=mean(absences), mean_failures=mean(failures), mean_health=mean(health))
+Male students with high alcohol consumption seem to have lower grades (again, there are outliers), and increased absences. There also seems to be more going out among high alcohol consumers, regardless of sex. All of these variables thus seem promising for the model.
 
-```
+Surprisingly, female students with high alcohol consumption report better state of health than those with low alcohol consumption! We could include this variable in the model, but the pre-assumption here would suggest the opposite, so the results gained might not be trustworthy. 
 
+Regarding failures, majority of the cases in the dataset have passed their exams (median = 0), so the boxplot is therefore not very informative. We'll have to try it out.
 
-
-Interestingly, students with higher alcohol consumption report better state of health. We should also keep the failures, since the mean of failures is greater among those with high alcohol consumption. So, we'll stick to the previous four. 
+Let's start with failures + absences + sex + G3 (model 1). 
 
 ### Logistic regression ###
 
 
 ```{r}
 m1 <- glm(high_use ~ failures + absences + sex + G3, data = alc, family = "binomial")
-coef(m1)
 summary(m1)
 ```
 
@@ -108,46 +106,41 @@ The interpretation regarding sex here is a bit different: one unit change in thi
 
 The odds can be tabulated with exp(Estimate) = propability/(1-probability) = ODDS. These can be interpreted as _odds ratios between one unit change vs. no change_ in the corresponding explanatory variable.
 
-In this model, both absences and sex are highly significant predictors of the probability of being judged to have high alcohol consumption.
+Failures are significant; and absences and sex highly significant predictors of the probability of being judged to have high alcohol consumption in this model. Grades are not.
 
 There is also AIC = Akaike information criterion, that tells us how economic the model is. That is, how good is the predictive ability when considering the number of variables included, as too many might cause overfitting.
 
-In this case, grades (G3) seem unnecessary, so we can drop it.
+Next, let's change grades to "go out".
 
 ```{r}
-m2 <- glm(high_use ~ failures + absences + sex, data = alc, family = "binomial")
-coef(m2)
+m2 <- glm(high_use ~ failures + absences + sex + goout, data = alc, family = "binomial")
 summary(m2)
 ```
 
 
-
-With model 2, AIC is lower (which is good!) and all the remaining variables remain statistically significant. Then we should check for multicollinearity:
+With model 2, AIC is lower (which is good!) and all the variables are statistically significant. Then we should check for multicollinearity:
 
 ```{r}
 library(car)
-
-#calculate the VIF for each predictor variable in the model
 vif(m2)
 ```
 
 
-VIF is low, so no worries in that regard. Then, let's calculate the corresponding ODDS ratios and confidence intervals (95%):
+VIF is low for all the variables, so no worries in that regard. Then, let's calculate the corresponding ODDS ratios and confidence intervals (95%):
 
 ```{r}
 OR <- coef(m2) %>% exp
-CI <- confint(m2)
+CI <- confint(m2) %>% exp
 cbind(OR, CI)
 ```
 
 
 
-The OR for having high alcohol consumption is 1.8 higher if failures increase by one (unit); 1.1 higher if absences increase by one (unit); and 2.7 higher if the student is a male (than a female). These are conditional of the other variable values staying similar.
+The odds ratio for having high alcohol consumption is 1.6 if failures increase by one (unit); 1.1 if absences increase by one (unit); 2.7 if the student is a male (compared to being female); and 2.0 if going out increases by one (unit). These are conditional of the other variable values staying similar.
 
-However, the 95% CI crosses the value "1" in absences and sex. That means that based on this data, the true OR may be 1, which means no difference (per one unit change). 
+If the 95% CI would cross the value "1", it would mean that the true odds ratio may be 1/1 = no difference in the odds per one unit change in the particular explanatory variable.
 
-This doesn't mean that the model could not be used for prediction purposes, though.
-
+The pre-stated hypothesis for a relationship between failures, absences, going out (and male gender, as an important background variable) and high alcohol consumption seems valid.
 
 ### Predicting exercise ###
 
@@ -190,7 +183,7 @@ lf <- loss_func(class = alc$high_use, prob = alc$probability)
 
 
 
-23 % of the predictions done with this model would be incorrect; 77 % would be correct. If I was to toss a coin (for a thousand times) guessing "heads" every time, I would be right in 50 % of cases. So the model exceeds pure guess.
+79 % of the model's predictions would be correct (21 % would be incorrect). If I was to toss a coin (for a thousand times) guessing "heads" every time, I would be right in 50 % of cases. So the model exceeds pure guess.
 
 
 ### Cross validation ###
@@ -206,9 +199,8 @@ cv$delta[1]
 ```
 
 
-This model's test set performance exceeds the performance of the exercise set model.
 
-
+This model's test set performance exceeds the performance of the Exercise set model.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

@@ -562,7 +562,7 @@ OR <- coef(m) %>% exp
 
 # compute confidence intervals (CI)
 
-CI <- confint(m)
+CI <- confint(m)%>% exp
 
 # print out the odds ratios with their confidence intervals
 cbind(OR, CI)
