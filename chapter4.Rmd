@@ -1,0 +1,180 @@
+# Assignment 4
+
+### Dataset description ###
+
+ 
+The dataset used in this exercise (Boston data) is available within the MASS R-package.
+```{r}
+library(MASS)
+data("Boston")
+str(Boston)
+dim(Boston)
+```
+</br>The data has 506 observations and 14 variables. All the variables are numerical; variables "chas" and "rad" are integers. More information about the variables in available [here](https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html).
+
+</br>
+<p style="text-align: center;">Variable summaries and graphical overview of the data</p> 
+```{r}
+summary(Boston)
+```
+
+
+```{r}
+library(tidyr); library(dplyr); library(ggplot2)
+gather(Boston) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + 
+  geom_boxplot()
+```
+</br>The variable values are all positive, and of very different magnitude. For example, "chas" values are between 0-1 and tax values between 187-711. Almost all of the distributions are skewed.
+
+</br>
+<p style="text-align: center;">Correlation matrix</p> 
+```{r}
+library(MASS)
+library(tidyr)
+library(corrplot)
+
+cor_matrix <- cor(Boston) 
+cor_matrix %>% round(2)
+corrplot(cor_matrix, method="circle", type = "upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.8)
+```
+</br>The correlation plot demonstrates that there is high positive correlation between the variables nox and indus; nox and age; indus and tax; rad and tax. Also, there is high negative correlation between dis and indus; dis and nox; dis and age; and medv and lstat. 
+
+### Dataset scaling with standardization ###
+```{r}
+boston_scaled <- scale(Boston)
+summary(boston_scaled)
+```
+</br>Standardization transforms the data to have zero mean (and a variance of 1). This way variables with large numbers don't have greater impact on the (future) model.
+
+### Exchanging numerical scaled crime rates with quantile-based categories ###
+```{r}
+data("Boston")
+boston_scaled <- as.data.frame(scale(Boston))
+boston_scaled$crim <- as.numeric(boston_scaled$crim)
+
+bins <- quantile(boston_scaled$crim)
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, labels=c("low", "med_low", "med_high","high"))
+
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+### Cross-validation ###
+
+Dataset is divided into train (80% of data) and test (20% of data) sets. In order to perform the validation, the correct crime classes are removed from test data and saved to an object for later use.
+```{r}
+# creating training set
+n <- nrow(boston_scaled)
+ind <- sample(n,  size = n * 0.8)
+train <- boston_scaled[ind,]
+
+# creating test set 
+test <- boston_scaled[-ind,]
+
+correct_classes <- test$crime
+test <- dplyr::select(test, -crime)
+```
+### Fitting linear discriminant analysis ###
+
+Linear discriminant analysis is performed on the train data. The target variable here will be the categorical multiclass variable crime rate. All the other variables act as predictor variables. We'll also draw the LDA (bi)plot with "arrows" that demonstrate the variable vectors.  
+```{r}
+
+lda.fit <- lda(crime  ~ ., data = train)
+
+lda.fit
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  graphics::arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes are taken as numeric for plotting purposes
+classes <- as.numeric(train$crime)
+
+# plot
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 2)
+
+```
+ 
+### Predicting exercise ###
+
+We'll apply the LDA model on the test data set and test how well it works.
+```{r}
+# predicting classes with test data
+lda.pred <- predict(lda.fit, newdata = test)
+
+# cross tabulation
+table(correct = correct_classes, predicted = lda.pred$class)
+
+```
+</br>The model predicts really well on the high crime rates, and quite well also on the low rates. However, it cannot differentiate very well between the med_low and med_high classes. If differentiating these two is not essential for the actual application of the model, then this model would work very well IRL.
+
+The last official assigment was to 
+
++  Reload the Boston dataset and standardize it
++  Calculate the distances between the observations
++  Run k-means algorithm on the dataset
++  Investigate the optimal number of clusters 
++  Run the algorithm again 
++  Visualize the clusters and 
++  Interpret the results.
+
+</br>
+<p style="text-align: center;">Euclidean distances using standardized Boston dataset</p> 
+```{r}
+library(MASS)
+data("Boston")
+boston_scaled <- scale(Boston)
+
+# euclidean distance matrix
+dist_eu <- dist(boston_scaled)
+summary(dist_eu)
+
+```
+</br>The mean euclidean or pythagorean distance is 4.9 (units).
+
+</br>
+<p style="text-align: center;">K-MEANS CLUSTERING</p> 
+
+We'll start with three clusters. We'll set seed for reproducibility of the results.
+```{r}
+library(MASS)
+library(ggplot2)
+set.seed(123)
+km <- kmeans(boston_scaled, centers = 3)
+pairs(boston_scaled, col = km$cluster)
+```
+</br>
+
+</br>
+<p style="text-align: center;">Cluster number optimization</p> 
+
+Optimization can be done by calculating the TOTAL within cluster sums of squares (twcss) and plotting them against the number of clusters. We'll assume that the optimal number of clusters will be somewhere between 2-10, so the maximum number of clusters is set to 15. 
+```{r}
+k_max <- 15
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+</br> The wcss drops radically at about 2, indicating that with two clusters, the data within each cluster resembles the cluster center prototypes well. Another feasible choice could be 7 clusters. Of course, adding more clusters would lower the twcss further but having too many clusters makes the model useless. We'll continue with two clusters. 
+```{r}
+set.seed(123)
+km <- kmeans(boston_scaled, centers = 2)
+library("ggplot2")                    
+library("GGally") 
+# plot with clusters
+pairs(boston_scaled, col=km$cluster)
+pairs(boston_scaled[,1:5], col=km$cluster)
+pairs(boston_scaled[,6:10], col=km$cluster)
+pairs(boston_scaled[,10:14], col=km$cluster)
+```
+</br>The variable "crim", "zn" and "indus" seem to have most effect on the clustering results.
+
+
+```{r}
+date()
+```
