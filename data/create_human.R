@@ -20,7 +20,7 @@ colnames(hd)[4] <- "Life.Exp"
 colnames(hd)[5] <- "Edu.Exp"
 colnames(hd)[6] <- "Edu.Mean"
 colnames(hd)[7] <- "GNI"
-colnames(hd)[8] <- "GNI-HDIrank"
+colnames(hd)[8] <- "GNIrank-HDIrank"
 
 colnames(gii)[3] <- "GII"
 colnames(gii)[4] <- "Mat.Mor"
