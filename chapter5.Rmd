@@ -1,0 +1,99 @@
+# Assignment 5
+### Human dataset ###
+
+The metadata for the human dataset are available at my GitHub repository *https://github.com/norppakeitto/IODS-project*.
+
+
+<p style="text-align: center;">Variable summaries and graphical overview of the human dataset</p> 
+
+```{r}
+library(readr)
+human <- read_csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/human2.csv")
+
+# The country names are moved to rownames.
+library(tibble)
+human_ <- column_to_rownames(human, "Country")
+str(human_)
+summary(human_)
+
+```
+</br> All the variables are numerical and have very different magnitude and variation. Let's examine the intercorrelations with correlation matrix.
+
+
+```{r}
+library(corrplot)
+cor(human_) %>% corrplot(method="circle", type = "upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+```
+</br> There seems to be strong positive correlation with maternal mortality (Mat.Mor) & adolescent birth rate (Ado.Birth); and expected years of schooling (Edu.Exp) & life expectancy at birth (Life.Exp). There is also moderate positive correlation with gross national income per capita (GNI) & life expectancy at birth; GNI & expected years of schooling; life expectancy at birth & female to male ratio with at least secondary education (Edu2.FM); and expected years if schooling & female to male ratio with at least secondary education.
+
+On the other hand, there is strong negative correlation with maternal mortality & life expectancy at birth; maternal mortality & expected years of schooling; maternal mortality & and female to male ratio with at least secondary education; adolescent birth rate & life expectancy at birth; adolescent birth rate & expected years of schooling. 
+
+There are also weaker correlations between the other variables; of note, percentage of female representatives in parliament (Parli.F) seems to be very weakly correlated with the other variables (except for female to male ratio in the labour force) and there is near zero correlation between female to male ratio with at least secondary education & Female to male ratio in the labour force.
+
+<p style="text-align: center;">Principal component analysis (PCA) on the raw (non-standardized) human data. I'll use the SVD method.</p> 
+```{r}
+pca_human <- prcomp(human_)
+s <- summary(pca_human)
+# rounded percentanges of variance captured by each PC
+pca_pr <- round(1*s$importance[2, ], digits = 5)
+pca_pr
+```
+</br>With non-standardized data, the first principal component already accounts for nearly 100 % of the original data variation.
+
+<p style="text-align: center;">biplot displaying the observations by the first two principal components</p>  
+```{r}
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+biplot(pca_human, cex = c(0.8, 1), col = c("orange", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```
+</br>Without standardization, GNI with the greatest variance overrules the analysis.
+
+Let's repeate the PCA with standardized variables.
+
+```{r}
+human_std <- scale(human_)
+pca_human2 <- prcomp(human_std)
+su <- summary(pca_human2)
+pca_pr2 <- round(1*su$importance[2, ], digits = 5)
+pca_pr2
+```
+</br>This time the first principal component accounts for 53.6% of the variation, and the second principal component adds another 16.2 %.
+
+<p style="text-align: center;">biplot displaying the observations by the first two principal components; standardized data</p>  
+```{r}
+pc_lab2 <- paste0(names(pca_pr2), " (", pca_pr2, "%)")
+biplot(pca_human2, cex = c(0.8, 1.0), expand=2, col = c("orange", "deeppink2"), xlab = pc_lab2[1], ylab = pc_lab2[2],xlim=c(-0.4, 0.4), ylim=c(-0.4, 0.4))
+```
+</br>The biplot demonstrates the previously mentioned linear dependencies between the original variables. Maternal mortality and adolescent birth rate are correlated and positively correlated with the first principal component. The arrows point to increasing values in these variables: so, these are both high in Sierra Leone, for example. 
+
+Expected years of schooling, life expectancy at birth, female to male ratio with at least secondary education and gross national income per capita are all intercorrelated. These are all negatively correlated with the first principal component. In countries of this direction, maternal mortality and adolescent birth rate are low.
+
+The results imply that in countries with high GNI, people live a long life and especially females are highly educated. If the situation is the opposite, there are teenage pregnancies and maternal mortality is high. 
+
+The second principal component seems to mostly explain variation in the percentage of female representatives in parliament and female to male ratio in the labour force, which are somewhat correlated. Since labour force indicates all the members of a particular country who are able to work, then more available labour force naturally may increase female attendance in the parliament, but only to some extent. These variables also seem to be somewhat independent regarding the other variables in the data. There may be countries with high female to male ratio in labour force but also high maternal mortality and adolescent birth rate.
+
+### The tea data ###  
+
+The tea data includes 300 individuals that were asked how they drink tea (18 questions) and what are their product's perception (12 questions). In addition, some personal details were asked (4 questions).
+```{r}
+tea <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/tea.csv", stringsAsFactors = TRUE)
+str(tea)
+dim(tea)
+```
+</br>The data has mostly factor variables; there is only one numerical variable, "age". 
+
+```{r}
+View(tea)
+```
+</br>The age variable is also available as a factor conversion (age_Q), namely the age quartiles. I'd like to see multiple correspondence analysis including the variables age (quartiles), sex and different meals of the day.
+
+
+</br>The barplots indicate that the largest age group in the study is 15-24 year old people. Tea is consumed during breakfast by almost 50 % of the respondents, but most don't have tea during dinner or lunch. Then, a greater proportion of respondents were female.
+
+<p style="text-align: center;">Multiple Correspondence Analysis (MCA) on the tea data</p>  
+
+```
+
+
+```{r}
+date()
+```
