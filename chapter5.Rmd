@@ -94,11 +94,29 @@ View(tea)
 </br>The age variable is also available as a factor conversion (age_Q), namely the age quartiles. I'd like to see multiple correspondence analysis including the variables age (quartiles), sex and different meals of the day.
 
 
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+keep_columns <- c("age_Q", "sex", "breakfast", "lunch", "dinner")
+tea_time <- dplyr::select(tea, keep_columns)
+
+pivot_longer(tea_time, cols = everything()) %>% 
+  ggplot(aes(value)) + facet_wrap("name", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+```
 </br>The barplots indicate that the largest age group in the study is 15-24 year old people. Tea is consumed during breakfast by almost 50 % of the respondents, but most don't have tea during dinner or lunch. Then, a greater proportion of respondents were female.
 
-<p style="text-align: center;">Multiple Correspondence Analysis (MCA) on the tea data</p>  
 
+<p style="text-align: center;">Multiple Correspondence Analysis (MCA) on the tea data</p>  
+```{r}
+library(FactoMineR)
+mca <- MCA(tea_time, graph = FALSE)
+
+summary(mca)
+
+plot(mca, invisible=c("ind"), graph.type = "classic", habillage = "quali")
 ```
+
 
 
 ```{r}
