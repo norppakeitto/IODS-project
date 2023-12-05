@@ -116,8 +116,6 @@ summary(mca)
 
 plot(mca, invisible=c("ind"), graph.type = "classic", habillage = "quali")
 ```
+</br> The first and second principal component account for only 32.4% of the data variance. The first principal component is dominated by drinking tea at dinner (or not). The second is dominated by drinking tea at lunch or not. Regarding sex, males seem to drink tea during the meals and females prefer drinking tea at other times. Young adults (25-34 y) consume tea at dinner; this might be because they enjoy a little bit of caffeine during the evening (perhaps returning to laptop after getting the kids to bed!) without suffering from poor sleep quality. On the other hand, the older age groups may get insomnia, so they stay away from dinner time tea. There are also younger folks (15-24 y) who prefer only breakfast tea; perhaps this is a habitual issue.
 
 
-```{r}
-date()
-```
