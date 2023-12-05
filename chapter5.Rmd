@@ -30,6 +30,7 @@ On the other hand, there is strong negative correlation with maternal mortality 
 
 There are also weaker correlations between the other variables; of note, percentage of female representatives in parliament (Parli.F) seems to be very weakly correlated with the other variables (except for female to male ratio in the labour force) and there is near zero correlation between female to male ratio with at least secondary education & Female to male ratio in the labour force.
 
+
 <p style="text-align: center;">Principal component analysis (PCA) on the raw (non-standardized) human data. I'll use the SVD method.</p> 
 ```{r}
 pca_human <- prcomp(human_)
@@ -57,6 +58,7 @@ pca_pr2 <- round(1*su$importance[2, ], digits = 5)
 pca_pr2
 ```
 </br>This time the first principal component accounts for 53.6% of the variation, and the second principal component adds another 16.2 %.
+
 
 <p style="text-align: center;">biplot displaying the observations by the first two principal components; standardized data</p>  
 ```{r}
