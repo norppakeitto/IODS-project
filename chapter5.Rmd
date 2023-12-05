@@ -118,7 +118,6 @@ plot(mca, invisible=c("ind"), graph.type = "classic", habillage = "quali")
 ```
 
 
-
 ```{r}
 date()
 ```
