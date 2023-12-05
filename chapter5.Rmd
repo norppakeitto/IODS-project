@@ -1,3 +1,8 @@
+```{r}
+fig.dim = c(8, 8)
+```
+
+
 # Assignment 5
 ### Human dataset ###
 
