@@ -22,7 +22,7 @@ summary(human_)
 
 ```{r}
 library(corrplot)
-cor(human_) %>% corrplot(method="circle", type = "upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+cor(human_) %>% corrplot(method="circle", type = "upper", cl.pos = "b", tl.pos = "d", tl.cex = 1.0)
 ```
 </br> There seems to be strong positive correlation with maternal mortality (Mat.Mor) & adolescent birth rate (Ado.Birth); and expected years of schooling (Edu.Exp) & life expectancy at birth (Life.Exp). There is also moderate positive correlation with gross national income per capita (GNI) & life expectancy at birth; GNI & expected years of schooling; life expectancy at birth & female to male ratio with at least secondary education (Edu2.FM); and expected years if schooling & female to male ratio with at least secondary education.
 
