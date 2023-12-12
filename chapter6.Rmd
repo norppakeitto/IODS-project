@@ -1,0 +1,191 @@
+```{r}
+fig.dim = c(8, 8)
+```
+
+# Assignment 6
+
+In our last assignment, we shall practice repeated measurement analyses with two data sets. The task was to implement summary methods (Chapter 8 of MABS), using the R codes of Exercise Set 6 PART I with "RATS" data; and linear mixed effects models (Chapter 9 of MABS), using the R codes of Exercise Set 6 with "BPRS" data. 
+
+Brief descriptions of the wrangling process is available at my GitHub repository *https://github.com/norppakeitto/IODS-project* data -folder.
+
+```{r}
+BPRSL <- read.csv("BPRSL.csv")
+RATSL <- read.csv("RATSL.csv")
+
+library(tidyverse)
+BPRSL <- BPRSL %>% mutate(treatment = as.factor(treatment), subject = as.factor(subject))
+
+RATSL <- RATSL %>% mutate(ID = as.factor(ID), Group = as.factor(Group))
+
+```
+
+## Rats
+We begin with RATSL, that is a long form data of 16 rats and consecutive weight measurements. The rat's were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period.
+
+```{r}
+str(RATSL)
+dim(RATSL)
+RATSL%>% summary()
+```
+
+
+
+```{r}
+library(ggplot2)
+
+# Individual rat weight values per week. Each group is in its own plot.
+ggplot(RATSL, aes(x = Time, y = Weight, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(RATSL$Weight), max(RATSL$Weight)))
+
+```
+</br>Rats in groups 2 and 3 seem to have greater weight to begin with. Consequently, they also have greater weight in the end. (At this point, I must say, this experiment is not going to give us any trustworthy results regarding diet effects since the rats were clearly not randomized to groups...)
+
+
+For graphical summary, I'll use standardized mean weight and standard error of mean.
+```{r}
+RATSL <- RATSL %>%
+  dplyr::group_by(Time) %>%
+  mutate(stdweight = scale(Weight)) %>% ungroup()
+
+library(dplyr)
+library(tidyr)
+# Summary data with mean and standard error of weight by group and Time
+RATSL_std <- RATSL %>%
+  dplyr::group_by(Group, Time) %>%
+  summarise(mean = mean(Weight), sd = sd(Weight), n= n(), se = sd/sqrt(n)) %>% ungroup()
+
+library(ggplot2)
+ggplot(RATSL_std, aes(x = Time, y = mean, linetype = Group, shape = Group)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2,3)) +
+  geom_point(size=3) +
+  scale_shape_manual(values = c(1,2,3)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3) +
+  theme(legend.position = c(0.1,0.3)) +
+  scale_y_continuous(name = "mean(weight) +/- se(weight)")
+
+```
+</br>
+
+
+We'll continue with boxplots that compare the total weight gain in each group during the study.
+```{r}
+library(dplyr)
+library(tidyr)
+
+RATSL <- read.csv("RATSL.csv")
+RATSL <- RATSL %>% mutate(ID = as.factor(ID), Group = as.factor(Group))
+
+RATSL <- RATSL %>%
+  dplyr::group_by(ID) %>%
+  mutate(weightgain=sum(Weight[Time==64]-Weight[Time==1]))%>% ungroup()
+
+glimpse(RATSL)
+
+library(ggplot2)
+ggplot(RATSL, aes(x = Group, y = weightgain)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(weight), weeks 1-8")
+```
+</br>The greatest overall weightgain has been in group 2, but there is a lot of variation. One rat has gained weight similarly as initially thinner rats from group 1. Since there are only four rats in group 2, and supposing this is not a measurement error, I would not recommend removing this outlier rat from the data.
+
+## BPRS
+
+So, let's forget about that nonsense rat data and move on. The BPRSL data is a long form data of psychiatric male patients that have been randomly assigned to two treatment groups (20 patients each). The "bprs" are psychiatric evaluation points that have been measured in the beginning (week 0) and weekly untill week 8.
+
+```{r}
+str(BPRSL)
+dim(BPRSL)
+BPRSL%>% summary()
+```
+
+We'll start with a plot that shows individual patients' progress in each treatment group.
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line() +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") +
+scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+```
+</br>It is obvious from this plot that the initial bprs points predict the situation at 8 weeks; patients with initially higher points tend to have higher points later. There is one outlier patient in treatment 2 group. Notably, some patients have higher bprs points in week 8 than they did week 0.
+
+Let's draw a plot that separates the treatment groups.
+
+```{r}
+ggplot(data = BPRSL)+geom_point(mapping=aes(x=week, y=bprs, color=treatment))
+```
+</br>There doesn't seem to be very much difference in the outcome bprs points at 8 weeks between the treatment groups.
+
+*random intercept model*
+
+The random intercept model allow the individual patients to differ in terms of the intercept; it allows the patients to be biologically different to begin with.
+```{r}
+
+library(lme4)
+
+BPRSL_ref <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRSL, REML = FALSE)
+
+summary(BPRSL_ref)
+```
+</br>The output has first some model performance statistics (AIC, BIC, LogLik etc.) outline the general capacity of the model performance and can be used in comparison to other models. Scaled residuals is the scaled variance not captured by the model. Random effects are those that we allowed to vary, so there is 47.41 (brps points) variability of the intercept across patients. 
+
+Then there are the fixed variables, in this model these were week and treatment. There is no correlation between these variables.
+
+
+*random intercept and random slope model*
+
+Let's try a more complicated model, that besides allowing patients to be different to begin with, also allows patients to respond differently each week. Well also compare this model to the previous one with likelihood ratio test.
+```{r}
+library(lme4)
+BPRSL_ref1 <- lmer(bprs ~ week + treatment +  (week | subject), data = BPRSL, REML = FALSE)
+
+summary(BPRSL_ref1)
+
+anova(BPRSL_ref1, BPRSL_ref)
+```
+</br>This model's general performance indicators are quite close to the previous one, but there seems to be somewhat better fit, judged by the scaled residuals.
+
+There is 0.9609 variability in the slope across subjects, and negative correlation between intercept and slope (when the subjects intercept increases by one unit of standard deviation, that subject's slope would decrease by -0.51 standard deviations). 
+
+The more complicated model's performance is significantly better than the simple model's performance.
+
+*random intercept and slope model with treatment × week interaction*
+
+The last model we'll try is the most complicated, which also allows interaction term of treatment and week.
+```{r}
+library(lme4)
+BPRSL_ref2 <- lmer(bprs ~ week + treatment +  (week | subject) + week *  treatment, data = BPRSL, REML = FALSE)
+
+summary(BPRSL_ref2)
+
+anova(BPRSL_ref2, BPRSL_ref1)
+
+```
+</br>The more complicated model is not significantly better than the previous one, so BPRSL_ref1 is a keeper!
+
+Let's plot the predicted brps points on top of the original data:
+```{r}
+
+BPRSL <- BPRSL %>% mutate(fitted = fitted(BPRSL_ref1))
+
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line() +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none")+
+  
+  geom_line(aes(x = week, y = fitted, linetype = subject, colour = "Red")) 
+```
+
+
+```{r}
+date()
+```
