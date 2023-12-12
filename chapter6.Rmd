@@ -90,7 +90,7 @@ library(ggplot2)
 ggplot(RATSL, aes(x = Group, y = weightgain)) +
   geom_boxplot() +
   stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
-  scale_y_continuous(name = "weight gain")
+  scale_y_continuous(name = "Total weight gain (grams)")
 ```
 </br>The greatest overall weightgain has been in group 2, but there is a lot of variation. One rat has gained weight similarly as initially thinner rats from group 1. Since there are only four rats in group 2, and supposing this is not a measurement error, I would not recommend removing this outlier rat from the data.
 
