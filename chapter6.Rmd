@@ -20,7 +20,7 @@ RATSL <- RATSL %>% mutate(ID = as.factor(ID), Group = as.factor(Group))
 ```
 
 ## Rats
-We begin with RATSL, that is a long form data of 16 rats and consecutive weight measurements. The rat's were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period.
+We begin with RATSL, that is a long form data of 16 rats and consecutive weight measurements. The rat's were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly over a 9-week period.
 
 ```{r}
 str(RATSL)
@@ -136,7 +136,7 @@ BPRSL_ref <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRSL, REML = 
 
 summary(BPRSL_ref)
 ```
-</br>The output has first some model performance statistics (AIC, BIC, LogLik etc.) outline the general capacity of the model performance and can be used in comparison to other models. Scaled residuals is the scaled variance not captured by the model. Random effects are those that we allowed to vary, so there is 47.41 (brps points) variability of the intercept across patients. 
+</br>The output has first some model performance statistics (AIC, BIC, LogLik etc.) that outline the general capacity of the model performance and can be used in comparison to other models. Scaled residuals is the scaled variance not captured by the model. Random effects are those that we allowed to vary, so there is 47.41 (brps points) variability of the intercept across patients. 
 
 Then there are the fixed variables, in this model these were week and treatment. There is no correlation between these variables.
 
@@ -183,9 +183,4 @@ ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
   theme(legend.position = "none")+
   
   geom_line(aes(x = week, y = fitted, linetype = subject, colour = "Red")) 
-```
-
-
-```{r}
-date()
 ```
